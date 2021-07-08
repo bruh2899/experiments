@@ -11,7 +11,7 @@ const LIGHTNING_DURATION = 30;
 function setup() {
     setVersion("Exploding Bubbles v",VERSION);
 
-    createCanvas(document.body.clientWidth, document.body.clientHeight);
+    createCanvas(document.body.clientWidth, document.body.clientHeight - 1);
     circles = [];
     flares = [];
     hives = [];
