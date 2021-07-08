@@ -18,6 +18,7 @@ function setup() {
     bees = [];
     modern_debris = [];
     lightning_bolts = [];
+    dragons = [];
     raining = false;
     fooVec = createVector();
 }
@@ -129,6 +130,10 @@ function draw() {
         endShape(CLOSE);
         pop();
     }
+    for(let d of dragons){
+        d.update();
+        // render dragon
+    }
     for(let i=circles.length-1;i>=0;i--){
         if(circles[i].dead) circles.splice(i,1);
     }
@@ -146,6 +151,10 @@ function draw() {
     }
     for(let i=lightning_bolts.length-1;i>=0;i--){
         if(lightning_bolts[i].dead) lightning_bolts.splice(i,1);
+    }
+    for(let i=dragons.length-1;i>=0;i--){
+        if(dragons[i].dead)
+            dragons.splice(i,1);
     }
     if(circles.length<40 && random()<0.005) circles.push(new Circle());
     if(raining){
@@ -656,6 +665,20 @@ class Lightning{
         this.age++;
         if(this.age > LIGHTNING_DURATION)
             this.dead = true;
+    }
+}
+
+class Dragon{
+    constructor(x, y, c){
+        this.pos = createVector(x, y);
+        this.rot = 3 * PI / 2;
+        this.color = c;
+        this.segments = [];
+        this.dead = false;
+    }
+
+    update(){
+        
     }
 }
 
