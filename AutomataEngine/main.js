@@ -347,8 +347,7 @@ window.onload = function(){
             }
         });
     
-        // complex and unfinished automaton preset
-        /* presets.eco = (()=>{
+        presets.eco = (()=>{
             const NULL = color(0);
             let step = 0;
             let strains = {};
@@ -369,17 +368,23 @@ window.onload = function(){
                 newStrain.green += (10 + Math.floor(Math.random() * 11)) * randSign();
                 newStrain.blue += (10 + Math.floor(Math.random() * 11)) * randSign();
                 newStrain.hunger += Math.floor(Math.random() * 5) * randSign();
+                newStrain.eatChance += Math.floor(Math.random() * 21) * randSign();
+                newStrain.mustEatThreshold += Math.floor(Math.random() * 16) * randSign();
                 newStrain.expansionThreshold += Math.floor(Math.random() * 26) * randSign();
                 newStrain.expansionFoundation += Math.floor(Math.random() * 41) * randSign();
                 newStrain.expansionEagerness += Math.floor(Math.random() * 6) * randSign();
+                newStrain.mutationRate += Math.floor(Math.random() * 11) * randSign();
     
                 newStrain.red = Math.max(Math.min(newStrain.red, 255), 0);
                 newStrain.green = Math.max(Math.min(newStrain.green, 255), 0);
                 newStrain.blue = Math.max(Math.min(newStrain.blue, 255), 0);
                 newStrain.hunger = Math.max(Math.min(newStrain.hunger, 25), 1);
+                newStrain.eatChance = Math.max(Math.min(newStrain.eatChance, 120), 20);
+                newStrain.mustEatThreshold = Math.max(Math.min(newStrain.mustEatThreshold, 200), 50);
                 newStrain.expansionThreshold = Math.max(Math.min(newStrain.expansionThreshold, 600), 250);
                 newStrain.expansionFoundation = Math.max(Math.min(newStrain.expansionFoundation, 1600), 600);
                 newStrain.expansionEagerness = Math.max(Math.min(newStrain.expansionEagerness, 50), 5);
+                newStrain.mutationRate = Math.max(Math.min(newStrain.mutationRate, 75), 25);
     
                 newStrain.count = 1;
                 return newStrain;
@@ -396,9 +401,12 @@ window.onload = function(){
                         st.green = Math.floor(Math.random() * 256);
                         st.blue = Math.floor(Math.random() * 256);
                         st.hunger = Math.floor(Math.random() * 25 + 1);
+                        st.eatChance = 20 + Math.floor(Math.random() * 101);
+                        st.mustEatThreshold = 50 + Math.floor(Math.random() * 151);
                         st.expansionThreshold = 250 + Math.floor(Math.random() * 351);
                         st.expansionFoundation = 600 + Math.floor(Math.random() * 1001);
                         st.expansionEagerness = 5 + Math.floor(Math.random() * 46);
+                        st.mutationRate = 25 + Math.floor(Math.random() * 51);
                         st.count = 1;
                         let col = color(st.red, st.green, st.blue);
                         if(col !== NULL){
@@ -444,7 +452,7 @@ window.onload = function(){
                             st.count--;
                             t.color = NULL;
                             t.energy = 0;
-                        }else if(t.energy < 100 && t.tree){
+                        }else if(t.tree && (Math.random() < st.eatChance / 10000 || t.energy < st.mustEatThreshold)){
                             t.tree = 0;
                             t.energy += 10000;
                         }else if(t.energy >= st.expansionThreshold + st.expansionFoundation && free.length > 0 && Math.random() < st.expansionEagerness/1000){
@@ -461,7 +469,7 @@ window.onload = function(){
                                 t.targetY = target.y;
                                 t.energy -= 200;
                             }
-                        }else if(Math.random() < 0.0005){
+                        }else if(Math.random() < st.mutationRate / 1000000){
                             let ns = mutantStrain(st);
                             let col = color(ns.red, ns.green, ns.blue);
                             if(col !== NULL){
@@ -522,7 +530,7 @@ window.onload = function(){
                     ctx.fill();
                 }
             });
-        })(); */
+        })();
     
         // UI
     
@@ -563,8 +571,8 @@ window.onload = function(){
         let presetDropdownData = {
             'Conway\'s Game of Life': presets.conwaylife,
             'Mold': presets.mold,
-            'Forest': presets.forest//,
-            //'Ecosystem': presets.eco
+            'Forest': presets.forest,
+            'Ecosystem': presets.eco
         };
     
         let presetDropdown = document.createElement('select');
