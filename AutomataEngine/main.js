@@ -364,16 +364,16 @@ window.onload = function(){
                 const randSign = ()=>Math.sign(Math.random() - 0.5);
     
                 let newStrain = Object.assign({}, strain);
-                newStrain.red += (10 + Math.floor(Math.random() * 11)) * randSign();
-                newStrain.green += (10 + Math.floor(Math.random() * 11)) * randSign();
-                newStrain.blue += (10 + Math.floor(Math.random() * 11)) * randSign();
+                newStrain.red += (15 + Math.floor(Math.random() * 11)) * randSign();
+                newStrain.green += (15 + Math.floor(Math.random() * 11)) * randSign();
+                newStrain.blue += (15 + Math.floor(Math.random() * 11)) * randSign();
                 newStrain.hunger += Math.floor(Math.random() * 5) * randSign();
                 newStrain.eatChance += Math.floor(Math.random() * 21) * randSign();
                 newStrain.mustEatThreshold += Math.floor(Math.random() * 16) * randSign();
                 newStrain.expansionThreshold += Math.floor(Math.random() * 26) * randSign();
                 newStrain.expansionFoundation += Math.floor(Math.random() * 41) * randSign();
                 newStrain.expansionEagerness += Math.floor(Math.random() * 6) * randSign();
-                newStrain.mutationRate += Math.floor(Math.random() * 11) * randSign();
+                newStrain.mutationRate += Math.floor(Math.random() * 21) * randSign();
     
                 newStrain.red = Math.max(Math.min(newStrain.red, 255), 0);
                 newStrain.green = Math.max(Math.min(newStrain.green, 255), 0);
@@ -384,7 +384,7 @@ window.onload = function(){
                 newStrain.expansionThreshold = Math.max(Math.min(newStrain.expansionThreshold, 600), 250);
                 newStrain.expansionFoundation = Math.max(Math.min(newStrain.expansionFoundation, 1600), 600);
                 newStrain.expansionEagerness = Math.max(Math.min(newStrain.expansionEagerness, 50), 5);
-                newStrain.mutationRate = Math.max(Math.min(newStrain.mutationRate, 75), 25);
+                newStrain.mutationRate = Math.max(Math.min(newStrain.mutationRate, 150), 50);
     
                 newStrain.count = 1;
                 return newStrain;
@@ -401,12 +401,12 @@ window.onload = function(){
                         st.green = Math.floor(Math.random() * 256);
                         st.blue = Math.floor(Math.random() * 256);
                         st.hunger = Math.floor(Math.random() * 25 + 1);
-                        st.eatChance = 20 + Math.floor(Math.random() * 101);
+                        // st.eatChance = 20 + Math.floor(Math.random() * 101);
                         st.mustEatThreshold = 50 + Math.floor(Math.random() * 151);
                         st.expansionThreshold = 250 + Math.floor(Math.random() * 351);
                         st.expansionFoundation = 600 + Math.floor(Math.random() * 1001);
                         st.expansionEagerness = 5 + Math.floor(Math.random() * 46);
-                        st.mutationRate = 25 + Math.floor(Math.random() * 51);
+                        st.mutationRate = 50 + Math.floor(Math.random() * 101);
                         st.count = 1;
                         let col = color(st.red, st.green, st.blue);
                         if(col !== NULL){
@@ -419,13 +419,14 @@ window.onload = function(){
                         }
                     }
     
-                    if(Math.random() < 0.02)
+                    if(Math.random() < 0.04)
                         t.tree = 1;
                     else
                         t.tree = 0;
     
                     t.targetX = undefined;
                     t.targetY = undefined;
+                    t.offer = undefined;
     
                     tmap.setTile(i, j, t);
                 }
@@ -435,6 +436,7 @@ window.onload = function(){
                     let tr = 0;
                     let free = [];
                     let enemy = [];
+                    let friend = [];
                     forNeighborhood(0, i, j, tmap.width(), tmap.height(), 1, (i1, j1, i2, j2)=>{
                         let t1 = tmap.getTile(i2, j2);
                         if(t1.tree)
@@ -443,6 +445,8 @@ window.onload = function(){
                             free.push({x: i2, y: j2});
                         else if(t1.color !== t.color)
                             enemy.push({x: i2, y: j2});
+                        else
+                            friend.push({x: i2, y: j2});
                     });
     
                     if(t.color !== NULL){
@@ -452,7 +456,7 @@ window.onload = function(){
                             st.count--;
                             t.color = NULL;
                             t.energy = 0;
-                        }else if(t.tree && (Math.random() < st.eatChance / 10000 || t.energy < st.mustEatThreshold)){
+                        }else if(t.tree && (Math.random() < st.eatChance / 100000 || t.energy < st.mustEatThreshold)){
                             t.tree = 0;
                             t.energy += 10000;
                         }else if(t.energy >= st.expansionThreshold + st.expansionFoundation && free.length > 0 && Math.random() < st.expansionEagerness/1000){
@@ -480,6 +484,20 @@ window.onload = function(){
                                 st.count--;
                                 t.color = col;
                             }
+                        }else if(Math.random() < 0.3 && friend.length > 0){
+                            let target = friend[Math.floor(Math.random() * friend.length)];
+                            if(target){
+                                t.targetX = target.x;
+                                t.targetY = target.y;
+                                let eDiff = t.energy - tmap.getTile(target.x, target.y).energy;
+                                if(eDiff > 0)
+                                    t.offer = Math.floor(eDiff * 0.5);
+                                else if(t.energy >= 40)
+                                    t.offer = 1 + Math.floor(Math.random() * 20);
+                                else
+                                    t.offer = 0;
+                                t.energy -= t.offer;
+                            }
                         }
                         cng = true;
                     }
@@ -500,19 +518,21 @@ window.onload = function(){
                             t.color = actor.color;
                             strains[actor.color].count++;
                             t.energy += strains[actor.color].expansionFoundation - 50;
-                        }else{
+                        }else if(t.color !== actor.color){
                             t.energy = Math.round(t.energy / 2);
                             if(Math.random() < 0.5){
                                 strains[t.color].count--;
                                 t.color = actor.color;
                                 strains[actor.color].count++;
                             }
-                        }
+                        }else if(actor.offer !== undefined)
+                            t.energy += actor.offer;
                         cng = true;
                     }
-                    if(t.targetX !== undefined || t.targetY !== undefined){
+                    if(t.targetX !== undefined || t.targetY !== undefined || t.offer !== undefined){
                         t.targetX = undefined;
                         t.targetY = undefined;
+                        t.offer = undefined;
                         cng = true;
                     }
                 }
