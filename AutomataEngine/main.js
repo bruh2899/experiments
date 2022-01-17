@@ -351,6 +351,26 @@ window.onload = function(){
             const NULL = color(0);
             let step = 0;
             let strains = {};
+
+            const attrRanges = {
+                red: [0, 255],
+                green: [0, 255],
+                blue: [0, 255],
+                attackA: [0, 5],
+                attackB: [0, 5],
+                attackC: [0, 5],
+                attackD: [0, 5],
+                defenseA: [0, 5],
+                defenseB: [0, 5],
+                defenseC: [0, 5],
+                defenseD: [0, 5],
+                eatChance: [10, 150],
+                mustEatThreshold: [50, 400],
+                expansionThreshold: [250, 600],
+                expansionFoundation: [600, 1600],
+                expansionEagerness: [5, 50],
+                mutationRate: [50, 150]
+            };
     
             function finishUpdate(){
                 step = 1 - step;
@@ -361,30 +381,42 @@ window.onload = function(){
             }
     
             function mutantStrain(strain){
-                const randSign = ()=>Math.sign(Math.random() - 0.5);
+                function mutationAmount(min, max){
+                    return Math.sign(Math.random() - 0.5) * (min + Math.floor(Math.random() * (max - min + 1)));
+                }
     
                 let newStrain = Object.assign({}, strain);
-                newStrain.red += (15 + Math.floor(Math.random() * 11)) * randSign();
-                newStrain.green += (15 + Math.floor(Math.random() * 11)) * randSign();
-                newStrain.blue += (15 + Math.floor(Math.random() * 11)) * randSign();
-                newStrain.hunger += Math.floor(Math.random() * 5) * randSign();
-                newStrain.eatChance += Math.floor(Math.random() * 21) * randSign();
-                newStrain.mustEatThreshold += Math.floor(Math.random() * 16) * randSign();
-                newStrain.expansionThreshold += Math.floor(Math.random() * 26) * randSign();
-                newStrain.expansionFoundation += Math.floor(Math.random() * 41) * randSign();
-                newStrain.expansionEagerness += Math.floor(Math.random() * 6) * randSign();
-                newStrain.mutationRate += Math.floor(Math.random() * 21) * randSign();
+                newStrain.red += mutationAmount(15, 25);
+                newStrain.green += mutationAmount(15, 25);
+                newStrain.blue += mutationAmount(15, 25);
+                newStrain.attackA += mutationAmount(0, 2);
+                newStrain.attackB += mutationAmount(0, 2);
+                newStrain.attackC += mutationAmount(0, 2);
+                newStrain.attackD += mutationAmount(0, 2);
+                newStrain.defenseA += mutationAmount(0, 2);
+                newStrain.defenseB += mutationAmount(0, 2);
+                newStrain.defenseC += mutationAmount(0, 2);
+                newStrain.defenseD += mutationAmount(0, 2);
+                newStrain.eatChance += mutationAmount(0, 20);
+                newStrain.mustEatThreshold += mutationAmount(0, 15);
+                newStrain.expansionThreshold += mutationAmount(0, 25);
+                newStrain.expansionFoundation += mutationAmount(0, 40);
+                newStrain.expansionEagerness += mutationAmount(0, 5);
+                newStrain.mutationRate += mutationAmount(0, 20);
     
-                newStrain.red = Math.max(Math.min(newStrain.red, 255), 0);
-                newStrain.green = Math.max(Math.min(newStrain.green, 255), 0);
-                newStrain.blue = Math.max(Math.min(newStrain.blue, 255), 0);
-                newStrain.hunger = Math.max(Math.min(newStrain.hunger, 25), 1);
-                newStrain.eatChance = Math.max(Math.min(newStrain.eatChance, 120), 20);
-                newStrain.mustEatThreshold = Math.max(Math.min(newStrain.mustEatThreshold, 200), 50);
-                newStrain.expansionThreshold = Math.max(Math.min(newStrain.expansionThreshold, 600), 250);
-                newStrain.expansionFoundation = Math.max(Math.min(newStrain.expansionFoundation, 1600), 600);
-                newStrain.expansionEagerness = Math.max(Math.min(newStrain.expansionEagerness, 50), 5);
-                newStrain.mutationRate = Math.max(Math.min(newStrain.mutationRate, 150), 50);
+                for(let k in attrRanges)
+                    newStrain[k] = Math.min(Math.max(newStrain[k], attrRanges[k][0]), attrRanges[k][1]);
+                
+                // newStrain.red = Math.max(Math.min(newStrain.red, 255), 0);
+                // newStrain.green = Math.max(Math.min(newStrain.green, 255), 0);
+                // newStrain.blue = Math.max(Math.min(newStrain.blue, 255), 0);
+                // newStrain.hunger = Math.max(Math.min(newStrain.hunger, 25), 1);
+                // newStrain.eatChance = Math.max(Math.min(newStrain.eatChance, 120), 20);
+                // newStrain.mustEatThreshold = Math.max(Math.min(newStrain.mustEatThreshold, 200), 50);
+                // newStrain.expansionThreshold = Math.max(Math.min(newStrain.expansionThreshold, 600), 250);
+                // newStrain.expansionFoundation = Math.max(Math.min(newStrain.expansionFoundation, 1600), 600);
+                // newStrain.expansionEagerness = Math.max(Math.min(newStrain.expansionEagerness, 50), 5);
+                // newStrain.mutationRate = Math.max(Math.min(newStrain.mutationRate, 150), 50);
     
                 newStrain.count = 1;
                 return newStrain;
@@ -397,16 +429,18 @@ window.onload = function(){
                     t.energy = 0;
                     if(Math.random() < 0.02){
                         let st = {};
-                        st.red = Math.floor(Math.random() * 256);
-                        st.green = Math.floor(Math.random() * 256);
-                        st.blue = Math.floor(Math.random() * 256);
-                        st.hunger = Math.floor(Math.random() * 25 + 1);
+                        for(let k in attrRanges)
+                            st[k] = attrRanges[k][0] + Math.floor(Math.random() * (attrRanges[k][1] - attrRanges[k][0] + 1));
+                        // st.red = Math.floor(Math.random() * 256);
+                        // st.green = Math.floor(Math.random() * 256);
+                        // st.blue = Math.floor(Math.random() * 256);
+                        // st.hunger = Math.floor(Math.random() * 25 + 1);
                         // st.eatChance = 20 + Math.floor(Math.random() * 101);
-                        st.mustEatThreshold = 50 + Math.floor(Math.random() * 151);
-                        st.expansionThreshold = 250 + Math.floor(Math.random() * 351);
-                        st.expansionFoundation = 600 + Math.floor(Math.random() * 1001);
-                        st.expansionEagerness = 5 + Math.floor(Math.random() * 46);
-                        st.mutationRate = 50 + Math.floor(Math.random() * 101);
+                        // st.mustEatThreshold = 50 + Math.floor(Math.random() * 151);
+                        // st.expansionThreshold = 250 + Math.floor(Math.random() * 351);
+                        // st.expansionFoundation = 600 + Math.floor(Math.random() * 1001);
+                        // st.expansionEagerness = 5 + Math.floor(Math.random() * 46);
+                        // st.mutationRate = 50 + Math.floor(Math.random() * 101);
                         st.count = 1;
                         let col = color(st.red, st.green, st.blue);
                         if(col !== NULL){
@@ -415,14 +449,11 @@ window.onload = function(){
                             else
                                 strains[col] = st;
                             t.color = col;
-                            t.energy = 10000;
+                            t.energy = 30000;
                         }
                     }
     
-                    if(Math.random() < 0.04)
-                        t.tree = 1;
-                    else
-                        t.tree = 0;
+                    t.tree = 1;
     
                     t.targetX = undefined;
                     t.targetY = undefined;
@@ -451,14 +482,16 @@ window.onload = function(){
     
                     if(t.color !== NULL){
                         let st = strains[t.color];
-                        t.energy -= st.hunger;
+                        let hunger = 1 + st.attackA + st.attackB + st.attackC + st.attackD +
+                            st.defenseA + st.defenseB + st.defenseC + st.defenseD;
+                        t.energy -= hunger;
                         if(t.energy < 0){
                             st.count--;
                             t.color = NULL;
                             t.energy = 0;
-                        }else if(t.tree && (Math.random() < st.eatChance / 100000 || t.energy < st.mustEatThreshold)){
+                        }else if(t.tree === 1 && (Math.random() < st.eatChance / 100000 || t.energy < st.mustEatThreshold)){
                             t.tree = 0;
-                            t.energy += 10000;
+                            t.energy += 30000;
                         }else if(t.energy >= st.expansionThreshold + st.expansionFoundation && free.length > 0 && Math.random() < st.expansionEagerness/1000){
                             let target = free[Math.floor(Math.random() * free.length)];
                             if(target){
@@ -471,7 +504,6 @@ window.onload = function(){
                             if(target){
                                 t.targetX = target.x;
                                 t.targetY = target.y;
-                                t.energy -= 200;
                             }
                         }else if(Math.random() < st.mutationRate / 1000000){
                             let ns = mutantStrain(st);
@@ -502,6 +534,13 @@ window.onload = function(){
                         cng = true;
                     }
                     if(!t.tree && Math.random() < 0.0005 * tr){
+                        if(Math.random() < 0.01)
+                            t.tree = 2;
+                        else
+                            t.tree = 1;
+                        cng = true;
+                    }
+                    if(t.tree === 2 && t.color === NULL && Math.random() < 0.005){
                         t.tree = 1;
                         cng = true;
                     }
@@ -519,11 +558,17 @@ window.onload = function(){
                             strains[actor.color].count++;
                             t.energy += strains[actor.color].expansionFoundation - 50;
                         }else if(t.color !== actor.color){
-                            t.energy = Math.round(t.energy / 2);
-                            if(Math.random() < 0.5){
-                                strains[t.color].count--;
+                            let st0 = strains[actor.color];
+                            let st1 = strains[t.color];
+                            let chanceA = 0.15 * Math.pow(1.45, st0.attackA - st1.defenseA);
+                            let chanceB = 0.15 * Math.pow(1.45, st0.attackB - st1.defenseB);
+                            let chanceC = 0.15 * Math.pow(1.45, st0.attackC - st1.defenseC);
+                            let chanceD = 0.15 * Math.pow(1.45, st0.attackD - st1.defenseD);
+                            let netChance = 1 - ((1 - chanceA) * (1 - chanceB) * (1 - chanceC) * (1 - chanceD));
+                            if(Math.random() < netChance){
+                                st1.count--;
                                 t.color = actor.color;
-                                strains[actor.color].count++;
+                                st0.count++;
                             }
                         }else if(actor.offer !== undefined)
                             t.energy += actor.offer;
@@ -544,7 +589,10 @@ window.onload = function(){
                     finishUpdate();
             },undefined,(ctx, x, y, s, t)=>{
                 if(t.tree){
-                    ctx.fillStyle = 'green';
+                    if(t.tree === 2)
+                        ctx.fillStyle = 'red';
+                    else
+                        ctx.fillStyle = 'green';
                     ctx.beginPath();
                     ctx.arc(x + s/2, y + s/2, s/4, 0, 2 * Math.PI);
                     ctx.fill();
