@@ -322,6 +322,9 @@ class Hive{
         }
         this.pos.add(this.vel);
         if(this.killer){
+            if(this.armor){
+                modern_debris.push(new ModernDebris(this.pos.x, this.pos.y, this.armor));
+            }
             let n = 0;
             while(n<this.m){
                 let l = this.m-n;
@@ -338,15 +341,21 @@ class Hive{
             if(!f.dead){
                 if(f.pos.x>this.pos.x && f.pos.x<this.pos.x+HIVE_SIZE && f.pos.y>this.pos.y && f.pos.y<this.pos.y+HIVE_SIZE){
                     if(f.killer && this.armor){
-                        this.armor -= random(0.05,1);
-                        if(this.armor < 0)
-                            this.armor = 0;
-                        if(abs(f.pos.x - this.pos.x) > abs(f.pos.y - this.pos.y))
-                            f.vel.y *= -1;
-                        else
-                            f.vel.x *= -1;
-                        f.pos.add(f.vel);
-                        f.killer = false;
+                        // this.armor -= random(0.05,1);
+                        // if(this.armor < 0)
+                        //     this.armor = 0;
+                        if(Math.random() < 0.1 * -Math.log2(this.armor / MAX_ARMOR)){
+                            this.m += f.m;
+                            this.killer = true;
+                            f.dead = true;
+                        }else{
+                            if(abs(f.pos.x - this.pos.x) > abs(f.pos.y - this.pos.y))
+                                f.vel.y *= -1;
+                            else
+                                f.vel.x *= -1;
+                            f.pos.add(f.vel);
+                            f.killer = false;
+                        }
                     }else{
                         this.m += f.m;
                         if(f.rain && random()<0.3 && !this.armor) this.ill = true;
@@ -619,11 +628,11 @@ class ModernDebris{
                         f.vel.add(fooVec);
                         if(f.killer){
                             f.killer = false;
-                            this.m -= random(0.05,1);
-                            if(this.m <= 0){
-                                this.dead = true;
-                                return;
-                            }
+                            // this.m -= random(0.05,1);
+                            // if(this.m <= 0){
+                            //     this.dead = true;
+                            //     return;
+                            // }
                         }
                     }
                 }
