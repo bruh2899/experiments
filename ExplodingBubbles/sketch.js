@@ -1,6 +1,6 @@
 // This code is total trash but eh
 
-const VERSION = "--DEV--";
+const VERSION = "20221207a";
 
 const HIVE_SIZE = 30;
 const BEE_MASS = 3;
