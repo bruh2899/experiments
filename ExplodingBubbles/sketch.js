@@ -1,136 +1,122 @@
 // This code is total trash but eh
 
-const VERSION = "20201214a";
+const VERSION = "20221207a";
 
 const HIVE_SIZE = 30;
 const BEE_MASS = 3;
 const MAX_ARMOR = 50;
 const MAX_DEBRIS_SIZE = 150;
+const LIGHTNING_DURATION = 30;
+const DEFAULT_STEP_DURATION = 25;
+
+var circles, flares, hives, bees, modern_debris, lightning_bolts, dragons, raining, fooVec, lastRender, speed, paused;
 
 function setup() {
     setVersion("Exploding Bubbles v",VERSION);
 
-    createCanvas(document.body.clientWidth, document.body.clientHeight);
+    createCanvas(document.body.clientWidth, document.body.clientHeight - 1);
     circles = [];
     flares = [];
     hives = [];
     bees = [];
     modern_debris = [];
+    lightning_bolts = [];
+    dragons = [];
     raining = false;
     fooVec = createVector();
+    lastRender = performance.now();
+    speed = 0;
+    paused = false;
 }
 
 function draw() {
+    if(!paused){
+        const tick = performance.now();
+        const step_duration = DEFAULT_STEP_DURATION * Math.pow(2, -speed);
+        const steps = Math.floor((tick - lastRender) / step_duration);
+        for(let i = 0; i < steps; i++)
+            step();
+        lastRender += steps * step_duration;
+    }
     background(220);
     for(let c of circles){
+        c.draw();
+    }
+    for(let f of flares){
+        f.draw();
+    }
+    for(let h of hives){
+        h.draw();
+    }
+    for(let b of bees){
+        b.draw();
+    }
+    for(let d of modern_debris){
+        d.draw();
+    }
+    for(let l of lightning_bolts){
+        l.draw();
+    }
+    for(let d of dragons){
+        d.draw();
+    }
+}
+
+function step(){
+    for(let c of circles){
         c.update();
-        let p = c.pos;
-        let cl = c.color;
-        if(c.ill){
-            strokeWeight(3);
-            stroke(0,150,0);
-        }else stroke(cl);
-        fill(red(cl),green(cl),blue(cl),50);
-        ellipse(p.x,p.y,2*c.r());
-        strokeWeight(1);
     }
     for(let f of flares){
         f.update();
-        let p = f.pos;
-        let v = f.vel;
-        let cl = f.color;
-        noStroke();
-        fill(red(cl),green(cl),blue(cl),50);
-        fooVec.set(v).setMag(2);
-        fooVec.rotate(-PI/2);
-        fooVec.add(p);
-        let p1x = fooVec.x;
-        let p1y = fooVec.y;
-        fooVec.set(v).setMag(2);
-        fooVec.rotate(PI/2);
-        fooVec.add(p);
-        let p2x = fooVec.x;
-        let p2y = fooVec.y;
-        fooVec.set(v).setMag(10);
-        fooVec.rotate(PI);
-        fooVec.add(p);
-        let p3x = fooVec.x;
-        let p3y = fooVec.y;
-        triangle(p1x,p1y,p2x,p2y,p3x,p3y);
-        fill(cl);
-        if(f.killer) fill(255,0,0);
-        ellipse(p.x,p.y,4);
     }
     for(let h of hives){
         h.update();
-        let p = h.pos;
-        let cl = h.color;
-        if(h.ill){
-            strokeWeight(3);
-            stroke(0,150,0);
-        }else if(h.armor){
-            strokeWeight(map(h.armor,5,MAX_ARMOR,1,6,true));
-            stroke(127);
-        }else stroke(cl);
-        fill(red(cl),green(cl),blue(cl),map(h.m,5,325,30,240,true));
-        rect(p.x,p.y,HIVE_SIZE,HIVE_SIZE);
-        strokeWeight(1);
     }
     for(let b of bees){
         b.update();
-        push();
-        let p = b.pos;
-        let cl = b.color;
-        translate(p.x,p.y);
-        rotate(b.angle);
-        if(b.ill){
-            strokeWeight(3);
-            stroke(0,150,0);
-        }else stroke(cl);
-        fill(red(cl),green(cl),blue(cl),50);
-        triangle(-15,-4,-15,4,0,0);
-        pop();
     }
     for(let d of modern_debris){
         d.update();
-        push();
-        let p = d.pos;
-        let r = d.r();
-        translate(p.x,p.y);
-        rotate(d.rot);
-        noStroke();
-        fill(127);
-        beginShape();
-        vertex(r,0);
-        vertex(r*cos(PI/3),r*sin(PI/3));
-        vertex(r*cos(2*PI/3),r*sin(2*PI/3));
-        vertex(-r,0);
-        vertex(r*cos(4*PI/3),r*sin(4*PI/3));
-        vertex(r*cos(5*PI/3),r*sin(5*PI/3));
-        endShape(CLOSE);
-        pop();
+    }
+    for(let l of lightning_bolts){
+        l.update();
+    }
+    for(let d of dragons){
+        d.update();
     }
     for(let i=circles.length-1;i>=0;i--){
-        if(circles[i].dead) circles.splice(i,1);
+        if(circles[i].dead)
+            circles.splice(i,1);
     }
     for(let i=flares.length-1;i>=0;i--){
-        if(flares[i].dead) flares.splice(i,1);
+        if(flares[i].dead)
+            flares.splice(i,1);
     }
     for(let i=hives.length-1;i>=0;i--){
-        if(hives[i].dead) hives.splice(i,1);
+        if(hives[i].dead)
+            hives.splice(i,1);
     }
     for(let i=bees.length-1;i>=0;i--){
-        if(bees[i].dead) bees.splice(i,1);
+        if(bees[i].dead)
+            bees.splice(i,1);
     }
     for(let i=modern_debris.length-1;i>=0;i--){
-        if(modern_debris[i].dead) modern_debris.splice(i,1);
+        if(modern_debris[i].dead)
+            modern_debris.splice(i,1);
+    }
+    for(let i=lightning_bolts.length-1;i>=0;i--){
+        if(lightning_bolts[i].dead)
+            lightning_bolts.splice(i,1);
+    }
+    for(let i=dragons.length-1;i>=0;i--){
+        if(dragons[i].dead)
+            dragons.splice(i,1);
     }
     if(circles.length<40 && random()<0.005) circles.push(new Circle());
     if(raining){
         if(random()<0.2) flares.push(new Flare(random(width),0,random(1,5),color(random(255),random(255),random(255)),PI/2,false,true));
         if(random()<0.00045) raining = false;
     }else if(random()<0.0002) raining = true;
-    //if(random()<0.0002) flares.push(new Flare(random(width),random(height),5,color(random(255),random(255),random(255)),undefined,true));
 }
 
 class Circle{
@@ -230,6 +216,18 @@ class Circle{
             }
         }
     }
+
+    draw(){
+        let p = this.pos;
+        let cl = this.color;
+        if(this.ill){
+            strokeWeight(3);
+            stroke(0,150,0);
+        }else stroke(cl);
+        fill(red(cl),green(cl),blue(cl),50);
+        ellipse(p.x,p.y,2*this.r());
+        strokeWeight(1);
+    }
 }
 
 class Flare{
@@ -269,6 +267,33 @@ class Flare{
             }
         }
     }
+
+    draw(){
+        let p = this.pos;
+        let v = this.vel;
+        let cl = this.color;
+        noStroke();
+        fill(red(cl),green(cl),blue(cl),50);
+        fooVec.set(v).setMag(2);
+        fooVec.rotate(-PI/2);
+        fooVec.add(p);
+        let p1x = fooVec.x;
+        let p1y = fooVec.y;
+        fooVec.set(v).setMag(2);
+        fooVec.rotate(PI/2);
+        fooVec.add(p);
+        let p2x = fooVec.x;
+        let p2y = fooVec.y;
+        fooVec.set(v).setMag(10);
+        fooVec.rotate(PI);
+        fooVec.add(p);
+        let p3x = fooVec.x;
+        let p3y = fooVec.y;
+        triangle(p1x,p1y,p2x,p2y,p3x,p3y);
+        fill(cl);
+        if(this.killer) fill(255,0,0);
+        ellipse(p.x,p.y,4);
+    }
 }
 
 class Hive{
@@ -297,6 +322,9 @@ class Hive{
         }
         this.pos.add(this.vel);
         if(this.killer){
+            if(this.armor){
+                modern_debris.push(new ModernDebris(this.pos.x, this.pos.y, this.armor));
+            }
             let n = 0;
             while(n<this.m){
                 let l = this.m-n;
@@ -313,15 +341,21 @@ class Hive{
             if(!f.dead){
                 if(f.pos.x>this.pos.x && f.pos.x<this.pos.x+HIVE_SIZE && f.pos.y>this.pos.y && f.pos.y<this.pos.y+HIVE_SIZE){
                     if(f.killer && this.armor){
-                        this.armor -= random(0.05,1);
-                        if(this.armor < 0)
-                            this.armor = 0;
-                        if(abs(f.pos.x - this.pos.x) > abs(f.pos.y - this.pos.y))
-                            f.vel.y *= -1;
-                        else
-                            f.vel.x *= -1;
-                        f.pos.add(f.vel);
-                        f.killer = false;
+                        // this.armor -= random(0.05,1);
+                        // if(this.armor < 0)
+                        //     this.armor = 0;
+                        if(Math.random() < 0.1 * -Math.log2(this.armor / MAX_ARMOR)){
+                            this.m += f.m;
+                            this.killer = true;
+                            f.dead = true;
+                        }else{
+                            if(abs(f.pos.x - this.pos.x) > abs(f.pos.y - this.pos.y))
+                                f.vel.y *= -1;
+                            else
+                                f.vel.x *= -1;
+                            f.pos.add(f.vel);
+                            f.killer = false;
+                        }
                     }else{
                         this.m += f.m;
                         if(f.rain && random()<0.3 && !this.armor) this.ill = true;
@@ -348,12 +382,31 @@ class Hive{
             hives.push(new Hive(this.pos.x,this.pos.y-1,this.m/2,this.color,false,armor));
             this.m /= 2;
         }
+        if(raining && this.armor && random() < 0.0002){
+            lightning_bolts.push(new Lightning(this.pos.x, this.pos.y));
+            // here be dragons
+        }
         if(random()<0.15) this.m -= random(0.2,1);
         if(this.m<5){
             this.dead = true;
             if(this.armor)
                 modern_debris.push(new ModernDebris(this.pos.x,this.pos.y,this.armor));
         }
+    }
+
+    draw(){
+        let p = this.pos;
+        let cl = this.color;
+        if(this.ill){
+            strokeWeight(3);
+            stroke(0,150,0);
+        }else if(this.armor){
+            strokeWeight(map(this.armor,5,MAX_ARMOR,1,6,true));
+            stroke(127);
+        }else stroke(cl);
+        fill(red(cl),green(cl),blue(cl),map(this.m,5,325,30,240,true));
+        rect(p.x,p.y,HIVE_SIZE,HIVE_SIZE);
+        strokeWeight(1);
     }
 }
 
@@ -486,6 +539,21 @@ class Bee{
         }
         if(this.ill && random()<0.005) this.dead = true;
     }
+
+    draw(){
+        push();
+        let p = this.pos;
+        let cl = this.color;
+        translate(p.x,p.y);
+        rotate(this.angle);
+        if(this.ill){
+            strokeWeight(3);
+            stroke(0,150,0);
+        }else stroke(cl);
+        fill(red(cl),green(cl),blue(cl),50);
+        triangle(-15,-4,-15,4,0,0);
+        pop();
+    }
 }
 
 class ModernDebris{
@@ -560,11 +628,11 @@ class ModernDebris{
                         f.vel.add(fooVec);
                         if(f.killer){
                             f.killer = false;
-                            this.m -= random(0.05,1);
-                            if(this.m <= 0){
-                                this.dead = true;
-                                return;
-                            }
+                            // this.m -= random(0.05,1);
+                            // if(this.m <= 0){
+                            //     this.dead = true;
+                            //     return;
+                            // }
                         }
                     }
                 }
@@ -590,6 +658,100 @@ class ModernDebris{
             this.rot = this.bee.angle;
             this.pos.add(-(13+r)*cos(this.rot),-(13+r)*sin(this.rot));
         }
+        if(raining && random() < 0.0002){
+            lightning_bolts.push(new Lightning(this.pos.x, this.pos.y));
+            if(this.m > 5){
+                let m1 = random(0.1,0.35)*this.m;
+                let m2 = random(0.1,0.35)*this.m;
+                modern_debris.push(new ModernDebris(this.pos.x,this.pos.y,m1));
+                modern_debris.push(new ModernDebris(this.pos.x,this.pos.y,m2));
+                this.m -= m1 + m2;
+            }
+            if(this.bee){
+                this.bee.dead = true;
+                this.bee = undefined;
+            }
+        }
+    }
+
+    draw(){
+        push();
+        let p = this.pos;
+        let r = this.r();
+        translate(p.x,p.y);
+        rotate(this.rot);
+        noStroke();
+        fill(127);
+        beginShape();
+        vertex(r,0);
+        vertex(r*cos(PI/3),r*sin(PI/3));
+        vertex(r*cos(2*PI/3),r*sin(2*PI/3));
+        vertex(-r,0);
+        vertex(r*cos(4*PI/3),r*sin(4*PI/3));
+        vertex(r*cos(5*PI/3),r*sin(5*PI/3));
+        endShape(CLOSE);
+        pop();
+    }
+}
+
+class Lightning{
+    constructor(x,y){
+        this.age = 0;
+        this.path = [];
+        this.dead = false;
+
+        this.path.push(createVector(x, y));
+        y = lerp(y, 0, random(0.2,0.7));
+        for(let i = 0; i < floor(random(2,4)); i++){
+            x += random(-80, 80);
+            y += random(-40, -100);
+            if(y <= 0)
+                break;
+            this.path.push(createVector(x, y));
+        }
+        x += random(-80, 80);
+        this.path.push(createVector(x, 0));
+    }
+
+    update(){
+        this.age++;
+        if(this.age > LIGHTNING_DURATION)
+            this.dead = true;
+    }
+
+    draw(){
+        push();
+        fill(255, 255, 100, 180);
+        stroke(255, 255, 100, 100);
+        strokeWeight(8);
+        beginShape();
+        vertex(this.path[0].x, this.path[0].y);
+        for(let i = 1; i < this.path.length; i++)
+            vertex(this.path[i].x - 5 - i*2, this.path[i].y);
+        vertex(this.path[this.path.length - 1].x - 5 - (this.path.length-1)*2, -10);
+        vertex(this.path[this.path.length - 1].x + 5 + (this.path.length-1)*2, -10);
+        for(let i = this.path.length - 1; i >= 1; i--)
+            vertex(this.path[i].x + 5 + i*2, this.path[i].y);
+        endShape(CLOSE);
+        pop();
+    }
+}
+
+class Dragon{
+    constructor(x, y, c){
+        this.pos = createVector(x, y);
+        this.rot = 3 * PI / 2;
+        this.color = c;
+        this.segments = [];
+        this.dead = false;
+    }
+
+    update(){
+        
+    }
+
+    draw(){
+
     }
 }
 
@@ -598,9 +760,24 @@ function mouseClicked(){
 }
 
 function keyPressed(){
-    if(key===' '){
+    if(key === ' '){
+        paused = !paused;
+        lastRender = performance.now();
+    }else if(keyCode === 221){
+        if(speed < 5)
+            speed++;
+    }else if(keyCode === 219){
+        if(speed > -5)
+            speed--;
+    }else if(key === 'R'){
         raining = !raining;
-    }/* else if(key==='Q'){
-        modern_debris.push(new ModernDebris(mouseX,mouseY,random(10,20)));
-    } */
+    }else if(key === 'Q'){
+        modern_debris.push(new ModernDebris(mouseX, mouseY, random(10,20)));
+    }else if(key === 'K'){
+        flares.push(new Flare(mouseX, mouseY, 5, color(random(255),random(255),random(255)), undefined, true));
+    }else if(key === 'H'){
+        hives.push(new Hive(mouseX, mouseY, random(80, 150), color(random(255),random(255),random(255))));
+    }else if(key === 'X'){
+        lightning_bolts.push(new Lightning(mouseX, mouseY));
+    }
 }

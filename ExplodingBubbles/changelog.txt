@@ -1,5 +1,23 @@
 About: Gravity Bubbles redone ... and more explosive
 
+v20221207a:
+    + Added lightning
+        > Randomly strikes modern debris and armored hives when raining
+        > Larger modern debris chunks split when struck by lightning
+        > Currently no effect on armored hives (yet)
+    + Added new keybinds for spawning
+        > "H" for hive
+        > "K" for killer flare
+        > "Q" for modern debris
+        > "X" for lightning (only visual; effects caused only by natural lightning)
+    + Added pausing and speed controls
+        > "[" to halve speed
+        > "]" to double speed
+        > Space to pause/resume
+        > Rain toggle now "R" instead of space
+    * Modern debris now fully immune to killer flares
+    * Hives' armor no longer degrades when hit with a killer flare
+        > Protection from killer flares now a random chance per hit depending on amount of armor
 v20201214a:
     + Added modern debris
         > When a killer flare strikes a bubble, there is a 1% chance of spawning a chunk of modern debris
