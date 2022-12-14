@@ -1,6 +1,6 @@
 // This code is total trash but eh
 
-const VERSION = "20221207a";
+const VERSION = "--DEV--";
 
 const HIVE_SIZE = 30;
 const BEE_MASS = 3;
@@ -9,7 +9,7 @@ const MAX_DEBRIS_SIZE = 150;
 const LIGHTNING_DURATION = 30;
 const DEFAULT_STEP_DURATION = 25;
 
-var circles, flares, hives, bees, modern_debris, lightning_bolts, dragons, raining, fooVec, lastRender, speed, paused;
+var circles, flares, hives, bees, modern_debris, lightning_bolts, dragons, raining, fooVec, lastRender, speed, paused, dark;
 
 function setup() {
     setVersion("Exploding Bubbles v",VERSION);
@@ -27,6 +27,7 @@ function setup() {
     lastRender = performance.now();
     speed = 0;
     paused = false;
+    dark = false;
 }
 
 function draw() {
@@ -38,7 +39,10 @@ function draw() {
             step();
         lastRender += steps * step_duration;
     }
-    background(220);
+    if(dark)
+        background(35);
+    else
+        background(220);
     for(let c of circles){
         c.draw();
     }
@@ -210,7 +214,10 @@ class Circle{
                 // v.y = lerp(v.y,f.vel.y,g);
                 if(d<0 && (random()<0.03 || f.killer)){
                     this.m += f.m;
-                    if(f.killer) this.killer = true;
+                    if(f.ill)
+                        this.ill = true;
+                    if(f.killer)
+                        this.killer = true;
                     f.dead = true;
                 }
             }
@@ -231,7 +238,7 @@ class Circle{
 }
 
 class Flare{
-    constructor(x,y,m,c,a,k,r){
+    constructor(x,y,m,c,a,k,r,i){
         this.pos = createVector(x,y);
         if(a!==undefined){
             this.vel = createVector(3);
@@ -241,6 +248,7 @@ class Flare{
         this.color = c;
         this.killer = k;
         this.rain = r;
+        this.ill = i;
         this.dead = false;
     }
     
@@ -291,7 +299,10 @@ class Flare{
         let p3y = fooVec.y;
         triangle(p1x,p1y,p2x,p2y,p3x,p3y);
         fill(cl);
-        if(this.killer) fill(255,0,0);
+        if(this.killer)
+            fill(255,0,0);
+        else if(this.ill)
+            fill(0,150,0);
         ellipse(p.x,p.y,4);
     }
 }
@@ -358,8 +369,10 @@ class Hive{
                         }
                     }else{
                         this.m += f.m;
-                        if(f.rain && random()<0.3 && !this.armor) this.ill = true;
-                        if(f.killer) this.killer = true;
+                        if(((f.rain && random()<0.3) || f.ill) && !this.armor)
+                            this.ill = true;
+                        if(f.killer)
+                            this.killer = true;
                         f.dead = true;
                     }
                 }
@@ -451,7 +464,7 @@ class Bee{
             if(candidate){
                 this.target = candidate;
             }else{
-                flares.push(new Flare(this.pos.x,this.pos.y,BEE_MASS,this.color,this.angle));
+                flares.push(new Flare(this.pos.x,this.pos.y,BEE_MASS,this.color,this.angle,false,false,this.ill));
                 this.dead = true;
                 return;
             }
@@ -493,7 +506,10 @@ class Bee{
             fooVec.set(this.target.pos);
             let d = fooVec.dist(this.pos)-this.target.r();
             if(abs(d)<15){
-                if(this.ill) this.target.ill = true;
+                if(this.ill)
+                    this.target.ill = true;
+                if(this.target.ill)
+                    this.ill = true;
                 if(random()<0.2){
                     let amount = random(1,4);
                     this.target.m -= amount;
@@ -501,8 +517,9 @@ class Bee{
                     fooVec.add(HIVE_SIZE/2,HIVE_SIZE/2);
                     fooVec.sub(this.pos);
                     let ang = fooVec.heading();
-                    flares.push(new Flare(this.pos.x,this.pos.y,amount,this.target.color,ang));
-                    if(this.target.m<1) this.target.dead = true;
+                    flares.push(new Flare(this.pos.x,this.pos.y,amount,this.target.color,ang,false,false,this.ill));
+                    if(this.target.m<1)
+                        this.target.dead = true;
                 }
             }
             fooVec.set(this.target.pos);
@@ -634,6 +651,8 @@ class ModernDebris{
                             //     return;
                             // }
                         }
+                        if(f.ill)
+                            f.ill = false;
                     }
                 }
             }
@@ -779,5 +798,7 @@ function keyPressed(){
         hives.push(new Hive(mouseX, mouseY, random(80, 150), color(random(255),random(255),random(255))));
     }else if(key === 'X'){
         lightning_bolts.push(new Lightning(mouseX, mouseY));
+    }else if(key === 'D'){
+        dark = !dark;
     }
 }
