@@ -470,7 +470,7 @@ class Bee{
             }
         }
         if(this.hive.dead){
-            flares.push(new Flare(this.pos.x,this.pos.y,BEE_MASS,this.color,this.angle));
+            flares.push(new Flare(this.pos.x,this.pos.y,BEE_MASS,this.color,this.angle,false,false,this.ill));
             this.dead = true;
             return;
         }
@@ -480,7 +480,7 @@ class Bee{
                 fooVec.set(this.hive.pos);
                 fooVec.add(HIVE_SIZE/2,HIVE_SIZE/2);
                 fooVec.sub(this.pos);
-                flares.push(new Flare(this.pos.x,this.pos.y,BEE_MASS,this.color,fooVec.heading()));
+                flares.push(new Flare(this.pos.x,this.pos.y,BEE_MASS,this.color,fooVec.heading(),false,false,this.ill));
                 this.dead = true;
             }
             return;
@@ -554,7 +554,22 @@ class Bee{
                 this.pos.add(cos(this.angle)*t,sin(this.angle)*t);
             }
         }
-        if(this.ill && random()<0.005) this.dead = true;
+        for(let i = 0; i < bees.length; i++){
+            const that = bees[i];
+            if(that !== this){
+                fooVec.set(this.pos);
+                fooVec.sub(that.pos);
+                let d = fooVec.mag();
+                if(d < 8 && d > 0){
+                    fooVec.setMag(0.3 / d);
+                    this.pos.add(fooVec);
+                }
+            }
+        }
+        if(this.ill && random()<0.005){
+            flares.push(new Flare(this.pos.x, this.pos.y, BEE_MASS, this.color, this.angle, false, false, true));
+            this.dead = true;
+        }
     }
 
     draw(){
