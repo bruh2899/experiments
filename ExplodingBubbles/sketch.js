@@ -408,7 +408,7 @@ class Hive{
                 if(c.pos.dist(this.pos) < c.r())
                     c.explode();
             }
-            
+
             // here be dragons
         }
         if(random()<0.15) this.m -= random(0.2,1);
@@ -536,8 +536,10 @@ class Bee{
             }
             tempVec.set(this.target.pos);
             tempVec.add(this.target.vel);
-            let t = (tempVec.dist(this.pos)-this.target.r())/8;
-            if(d>=15) t = min(3,t);
+            d = tempVec.dist(this.pos)-this.target.r();
+            let t = 3;
+            if(d < 15)
+                t = min(3, d/8);
             this.pos.add(cos(this.angle)*t,sin(this.angle)*t);
         }else if(this.target instanceof ModernDebris){
             if(carrying){
@@ -561,8 +563,10 @@ class Bee{
                 }
                 tempVec.set(this.target.pos);
                 tempVec.add(this.target.vel);
-                let t = (tempVec.dist(this.pos)-this.target.r())/8;
-                if(d>=10) t = min(3,t);
+                d = tempVec.dist(this.pos)-this.target.r();
+                let t = 3;
+                if(d < 10)
+                    t = min(3, d/8);
                 this.pos.add(cos(this.angle)*t,sin(this.angle)*t);
             }
         }
