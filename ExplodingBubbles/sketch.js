@@ -133,7 +133,6 @@ class Circle{
         this.vel = p5.Vector.random2D().mult(random(1,4));
         this.color = color(random(255),random(255),random(255));
         this.ill = false;
-        this.killer = false;
         this.dead = false;
     }
 
@@ -180,14 +179,14 @@ class Circle{
             }
         }
         let s = r/sqrt(width*height);
-        if(random()<pow(s,3.5) || this.killer){
-            if(!this.killer && m>=10 && random()<0.2){
+        if(random()<pow(s,3.5)){
+            if(m >= 10 && random()<0.2){
                 hives.push(new Hive(p.x,p.y,m/2,this.color,this.ill));
                 this.m /= 2;
+            }else{
+                this.explode();
                 return;
             }
-            this.explode();
-            return;
         }
         for(let i=0;i<flares.length;i++){
             let f = flares[i];
@@ -201,31 +200,42 @@ class Circle{
                 // v.y = lerp(v.y,f.vel.y,g);
                 if(d<0 && (random()<0.03 || f.killer)){
                     this.m += f.m;
+                    f.dead = true;
                     if(f.ill)
                         this.ill = true;
-                    if(f.killer)
-                        this.killer = true;
-                    f.dead = true;
+                    if(f.killer){
+                        this.explode(true);
+                        return;
+                    }
                 }
             }
         }
     }
 
-    explode(){
+    explode(hit_by_killer){
         const m = this.m;
         const p = this.pos;
-        let n = 0;
-        if(this.killer && random()<0.01){
-            let m1 = min(random(3,10),m);
-            modern_debris.push(new ModernDebris(p.x,p.y,m1));
-            n += m1;
+        let left = m;
+        if(hit_by_killer){
+            for(let i = 0; i < modern_debris.length; i++){
+                let piece = modern_debris[i];
+                if(piece.pos.dist(this.pos) < this.r()){
+                    let m1 = min(random(3, 10), left);
+                    piece.m += m1;
+                    left -= m1;
+                }
+            }
+            if(random() < 0.01 && left > 0){
+                let m1 = min(random(3, 10), left);
+                modern_debris.push(new ModernDebris(p.x,p.y,m1));
+                left -= m1;
+            }
         }
-        while(n<m){
-            let l = m-n;
+        while(left > 0){
             let m1 = random(1,5);
-            m1 = min(l,m1);
-            flares.push(new Flare(p.x,p.y,m1,this.color,undefined,this.ill||this.killer));
-            n += m1;
+            m1 = min(left, m1);
+            flares.push(new Flare(p.x, p.y, m1, this.color, undefined, this.ill || hit_by_killer));
+            left -= m1;
         }
         this.dead = true;
     }
