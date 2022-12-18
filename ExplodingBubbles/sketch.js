@@ -1,6 +1,6 @@
 // This code is total trash but eh
 
-const VERSION = "20221207a";
+const VERSION = "20221218a";
 
 const HIVE_SIZE = 30;
 const BEE_MASS = 3;
@@ -9,7 +9,7 @@ const MAX_DEBRIS_SIZE = 150;
 const LIGHTNING_DURATION = 30;
 const DEFAULT_STEP_DURATION = 25;
 
-var circles, flares, hives, bees, modern_debris, lightning_bolts, dragons, raining, fooVec, lastRender, speed, paused;
+var circles, flares, hives, bees, modern_debris, lightning_bolts, dragons, raining, tempVec, lastRender, speed, paused, dark;
 
 function setup() {
     setVersion("Exploding Bubbles v",VERSION);
@@ -23,10 +23,11 @@ function setup() {
     lightning_bolts = [];
     dragons = [];
     raining = false;
-    fooVec = createVector();
+    tempVec = createVector();
     lastRender = performance.now();
     speed = 0;
     paused = false;
+    dark = false;
 }
 
 function draw() {
@@ -38,7 +39,10 @@ function draw() {
             step();
         lastRender += steps * step_duration;
     }
-    background(220);
+    if(dark)
+        background(35);
+    else
+        background(220);
     for(let c of circles){
         c.draw();
     }
@@ -129,7 +133,6 @@ class Circle{
         this.vel = p5.Vector.random2D().mult(random(1,4));
         this.color = color(random(255),random(255),random(255));
         this.ill = false;
-        this.killer = false;
         this.dead = false;
     }
 
@@ -153,20 +156,20 @@ class Circle{
             if(that===this) continue;
             let d = p.dist(that.pos)-r-that.r();
             let f = pow(0.5,max(d,0))*0.6;
-            fooVec.set(that.vel);
-            fooVec.sub(v);
-            fooVec.mult(f/m);
-            v.add(fooVec);
+            tempVec.set(that.vel);
+            tempVec.sub(v);
+            tempVec.mult(f/m);
+            v.add(tempVec);
             // v.x = lerp(v.x,that.vel.x,f);
             // v.y = lerp(v.y,that.vel.y,f);
-            fooVec.set(p);
-            fooVec.sub(that.pos);
-            fooVec.setMag(pow(0.97,max(d,0))*0.15);
-            fooVec.mult(1/m);
-            v.sub(fooVec);
+            tempVec.set(p);
+            tempVec.sub(that.pos);
+            tempVec.setMag(pow(0.97,max(d,0))*0.15);
+            tempVec.mult(1/m);
+            v.sub(tempVec);
             if(d<0){
-                fooVec.setMag(0.3/m);
-                v.add(fooVec);
+                tempVec.setMag(0.3/m);
+                v.add(tempVec);
                 if(that.m>=m && random()<0.0001){
                     that.m += m;
                     if(this.ill) that.ill = true;
@@ -176,45 +179,65 @@ class Circle{
             }
         }
         let s = r/sqrt(width*height);
-        if(random()<pow(s,3.5) || this.killer){
-            if(!this.killer && m>=10 && random()<0.2){
+        if(random()<pow(s,3.5)){
+            if(m >= 10 && random()<0.2){
                 hives.push(new Hive(p.x,p.y,m/2,this.color,this.ill));
                 this.m /= 2;
+            }else{
+                this.explode();
                 return;
             }
-            let n = 0;
-            if(this.killer && random()<0.01){
-                let m1 = min(random(3,10),m);
-                modern_debris.push(new ModernDebris(p.x,p.y,m1));
-                n += m1;
-            }
-            while(n<m){
-                let l = m-n;
-                let m1 = random(1,5);
-                m1 = min(l,m1);
-                flares.push(new Flare(p.x,p.y,m1,this.color,undefined,this.ill||this.killer));
-                n += m1;
-            }
-            this.dead = true;
-            return;
         }
         for(let i=0;i<flares.length;i++){
             let f = flares[i];
             if(!f.dead){
                 let d = p.dist(f.pos)-r;
                 let g = pow(0.6,max(d,0));
-                fooVec.set(f.vel);
-                fooVec.setMag(max(f.vel.mag() - cos(v.angleBetween(f.vel))*v.mag(), 0)*g/m);
-                v.add(fooVec);
+                tempVec.set(f.vel);
+                tempVec.setMag(max(f.vel.mag() - cos(v.angleBetween(f.vel))*v.mag(), 0)*g/m);
+                v.add(tempVec);
                 // v.x = lerp(v.x,f.vel.x,g);
                 // v.y = lerp(v.y,f.vel.y,g);
                 if(d<0 && (random()<0.03 || f.killer)){
                     this.m += f.m;
-                    if(f.killer) this.killer = true;
                     f.dead = true;
+                    if(f.ill)
+                        this.ill = true;
+                    if(f.killer){
+                        this.explode(true);
+                        return;
+                    }
                 }
             }
         }
+    }
+
+    explode(hit_by_killer){
+        const m = this.m;
+        const p = this.pos;
+        let left = m;
+        if(hit_by_killer){
+            for(let i = 0; i < modern_debris.length; i++){
+                let piece = modern_debris[i];
+                if(piece.pos.dist(this.pos) < this.r()){
+                    let m1 = min(random(3, 10), left);
+                    piece.m += m1;
+                    left -= m1;
+                }
+            }
+            if(random() < 0.01 && left > 0){
+                let m1 = min(random(3, 10), left);
+                modern_debris.push(new ModernDebris(p.x,p.y,m1));
+                left -= m1;
+            }
+        }
+        while(left > 0){
+            let m1 = random(1,5);
+            m1 = min(left, m1);
+            flares.push(new Flare(p.x, p.y, m1, this.color, undefined, this.ill || hit_by_killer));
+            left -= m1;
+        }
+        this.dead = true;
     }
 
     draw(){
@@ -231,7 +254,7 @@ class Circle{
 }
 
 class Flare{
-    constructor(x,y,m,c,a,k,r){
+    constructor(x,y,m,c,a,k,r,i){
         this.pos = createVector(x,y);
         if(a!==undefined){
             this.vel = createVector(3);
@@ -241,6 +264,7 @@ class Flare{
         this.color = c;
         this.killer = k;
         this.rain = r;
+        this.ill = i;
         this.dead = false;
     }
     
@@ -274,24 +298,27 @@ class Flare{
         let cl = this.color;
         noStroke();
         fill(red(cl),green(cl),blue(cl),50);
-        fooVec.set(v).setMag(2);
-        fooVec.rotate(-PI/2);
-        fooVec.add(p);
-        let p1x = fooVec.x;
-        let p1y = fooVec.y;
-        fooVec.set(v).setMag(2);
-        fooVec.rotate(PI/2);
-        fooVec.add(p);
-        let p2x = fooVec.x;
-        let p2y = fooVec.y;
-        fooVec.set(v).setMag(10);
-        fooVec.rotate(PI);
-        fooVec.add(p);
-        let p3x = fooVec.x;
-        let p3y = fooVec.y;
+        tempVec.set(v).setMag(2);
+        tempVec.rotate(-PI/2);
+        tempVec.add(p);
+        let p1x = tempVec.x;
+        let p1y = tempVec.y;
+        tempVec.set(v).setMag(2);
+        tempVec.rotate(PI/2);
+        tempVec.add(p);
+        let p2x = tempVec.x;
+        let p2y = tempVec.y;
+        tempVec.set(v).setMag(10);
+        tempVec.rotate(PI);
+        tempVec.add(p);
+        let p3x = tempVec.x;
+        let p3y = tempVec.y;
         triangle(p1x,p1y,p2x,p2y,p3x,p3y);
         fill(cl);
-        if(this.killer) fill(255,0,0);
+        if(this.killer)
+            fill(255,0,0);
+        else if(this.ill)
+            fill(0,150,0);
         ellipse(p.x,p.y,4);
     }
 }
@@ -358,8 +385,10 @@ class Hive{
                         }
                     }else{
                         this.m += f.m;
-                        if(f.rain && random()<0.3 && !this.armor) this.ill = true;
-                        if(f.killer) this.killer = true;
+                        if(((f.rain && random()<0.3) || f.ill) && !this.armor)
+                            this.ill = true;
+                        if(f.killer)
+                            this.killer = true;
                         f.dead = true;
                     }
                 }
@@ -384,6 +413,12 @@ class Hive{
         }
         if(raining && this.armor && random() < 0.0002){
             lightning_bolts.push(new Lightning(this.pos.x, this.pos.y));
+            for(let i = 0; i < circles.length; i++){
+                const c = circles[i];
+                if(c.pos.dist(this.pos) < c.r())
+                    c.explode();
+            }
+
             // here be dragons
         }
         if(random()<0.15) this.m -= random(0.2,1);
@@ -451,23 +486,23 @@ class Bee{
             if(candidate){
                 this.target = candidate;
             }else{
-                flares.push(new Flare(this.pos.x,this.pos.y,BEE_MASS,this.color,this.angle));
+                flares.push(new Flare(this.pos.x,this.pos.y,BEE_MASS,this.color,this.angle,false,false,this.ill));
                 this.dead = true;
                 return;
             }
         }
         if(this.hive.dead){
-            flares.push(new Flare(this.pos.x,this.pos.y,BEE_MASS,this.color,this.angle));
+            flares.push(new Flare(this.pos.x,this.pos.y,BEE_MASS,this.color,this.angle,false,false,this.ill));
             this.dead = true;
             return;
         }
         if(this.target.dead){
             this.target = undefined;
             if(random()<0.2){
-                fooVec.set(this.hive.pos);
-                fooVec.add(HIVE_SIZE/2,HIVE_SIZE/2);
-                fooVec.sub(this.pos);
-                flares.push(new Flare(this.pos.x,this.pos.y,BEE_MASS,this.color,fooVec.heading()));
+                tempVec.set(this.hive.pos);
+                tempVec.add(HIVE_SIZE/2,HIVE_SIZE/2);
+                tempVec.sub(this.pos);
+                flares.push(new Flare(this.pos.x,this.pos.y,BEE_MASS,this.color,tempVec.heading(),false,false,this.ill));
                 this.dead = true;
             }
             return;
@@ -480,35 +515,41 @@ class Bee{
         if(this.target instanceof ModernDebris && this.target.bee === this)
             carrying = true;
         if(carrying){
-            fooVec.set(this.hive.pos);
-            fooVec.add(HIVE_SIZE/2,HIVE_SIZE/2);
-            fooVec.sub(this.pos);
+            tempVec.set(this.hive.pos);
+            tempVec.add(HIVE_SIZE/2,HIVE_SIZE/2);
+            tempVec.sub(this.pos);
         }else{
-            fooVec.set(this.target.pos);
-            fooVec.sub(this.pos);
+            tempVec.set(this.target.pos);
+            tempVec.sub(this.pos);
         }
-        let a = fooVec.heading();
+        let a = tempVec.heading();
         this.angle = lerp(this.angle+(a-this.angle>PI ? TAU : a-this.angle<-PI ? -TAU : 0),a,0.1);
         if(this.target instanceof Circle){
-            fooVec.set(this.target.pos);
-            let d = fooVec.dist(this.pos)-this.target.r();
+            tempVec.set(this.target.pos);
+            let d = tempVec.dist(this.pos)-this.target.r();
             if(abs(d)<15){
-                if(this.ill) this.target.ill = true;
+                if(this.ill)
+                    this.target.ill = true;
+                if(this.target.ill)
+                    this.ill = true;
                 if(random()<0.2){
                     let amount = random(1,4);
                     this.target.m -= amount;
-                    fooVec.set(this.hive.pos);
-                    fooVec.add(HIVE_SIZE/2,HIVE_SIZE/2);
-                    fooVec.sub(this.pos);
-                    let ang = fooVec.heading();
-                    flares.push(new Flare(this.pos.x,this.pos.y,amount,this.target.color,ang));
-                    if(this.target.m<1) this.target.dead = true;
+                    tempVec.set(this.hive.pos);
+                    tempVec.add(HIVE_SIZE/2,HIVE_SIZE/2);
+                    tempVec.sub(this.pos);
+                    let ang = tempVec.heading();
+                    flares.push(new Flare(this.pos.x,this.pos.y,amount,this.target.color,ang,false,false,this.ill));
+                    if(this.target.m<1)
+                        this.target.dead = true;
                 }
             }
-            fooVec.set(this.target.pos);
-            fooVec.add(this.target.vel);
-            let t = (fooVec.dist(this.pos)-this.target.r())/8;
-            if(d>=15) t = min(3,t);
+            tempVec.set(this.target.pos);
+            tempVec.add(this.target.vel);
+            d = tempVec.dist(this.pos)-this.target.r();
+            let t = 3;
+            if(d < 15)
+                t = min(3, d/8);
             this.pos.add(cos(this.angle)*t,sin(this.angle)*t);
         }else if(this.target instanceof ModernDebris){
             if(carrying){
@@ -524,20 +565,37 @@ class Bee{
                     }
                 }
             }else{
-                fooVec.set(this.target.pos);
-                let d = fooVec.dist(this.pos)-this.target.r();
+                tempVec.set(this.target.pos);
+                let d = tempVec.dist(this.pos)-this.target.r();
                 if(d<10){
                     this.target.bee = this;
                     this.ill = false;
                 }
-                fooVec.set(this.target.pos);
-                fooVec.add(this.target.vel);
-                let t = (fooVec.dist(this.pos)-this.target.r())/8;
-                if(d>=10) t = min(3,t);
+                tempVec.set(this.target.pos);
+                tempVec.add(this.target.vel);
+                d = tempVec.dist(this.pos)-this.target.r();
+                let t = 3;
+                if(d < 10)
+                    t = min(3, d/8);
                 this.pos.add(cos(this.angle)*t,sin(this.angle)*t);
             }
         }
-        if(this.ill && random()<0.005) this.dead = true;
+        for(let i = 0; i < bees.length; i++){
+            const that = bees[i];
+            if(that !== this){
+                tempVec.set(this.pos);
+                tempVec.sub(that.pos);
+                let d = tempVec.mag();
+                if(d < 8 && d > 0){
+                    tempVec.setMag(0.3 / d);
+                    this.pos.add(tempVec);
+                }
+            }
+        }
+        if(this.ill && random()<0.005){
+            flares.push(new Flare(this.pos.x, this.pos.y, BEE_MASS, this.color, this.angle, false, false, true));
+            this.dead = true;
+        }
     }
 
     draw(){
@@ -617,15 +675,15 @@ class ModernDebris{
             for(let i=0;i<flares.length;i++){
                 let f = flares[i];
                 if(!f.dead){
-                    fooVec.set(f.pos);
-                    fooVec.sub(p);
-                    let r3 = (r*sqrt(3)/2)/cos(abs(PI/6 - ((((fooVec.heading()-this.rot)%(2*PI)+2*PI)%(2*PI)) % (PI/3))));
-                    if(fooVec.mag() < r3 && abs(fooVec.angleBetween(f.vel)) > PI/2){
-                        let alpha = floor((((fooVec.heading()-this.rot)%(2*PI)+2*PI)%(2*PI))/(PI/3))*PI/3 + PI/6 + this.rot; // angle normal to side of hexagon
+                    tempVec.set(f.pos);
+                    tempVec.sub(p);
+                    let r3 = (r*sqrt(3)/2)/cos(abs(PI/6 - ((((tempVec.heading()-this.rot)%(2*PI)+2*PI)%(2*PI)) % (PI/3))));
+                    if(tempVec.mag() < r3 && abs(tempVec.angleBetween(f.vel)) > PI/2){
+                        let alpha = floor((((tempVec.heading()-this.rot)%(2*PI)+2*PI)%(2*PI))/(PI/3))*PI/3 + PI/6 + this.rot; // angle normal to side of hexagon
                         let reflect_val = -2*cos(f.vel.heading()-alpha)*f.vel.mag();
-                        fooVec.set(reflect_val);
-                        fooVec.rotate(alpha);
-                        f.vel.add(fooVec);
+                        tempVec.set(reflect_val);
+                        tempVec.rotate(alpha);
+                        f.vel.add(tempVec);
                         if(f.killer){
                             f.killer = false;
                             // this.m -= random(0.05,1);
@@ -634,6 +692,8 @@ class ModernDebris{
                             //     return;
                             // }
                         }
+                        if(f.ill)
+                            f.ill = false;
                     }
                 }
             }
@@ -670,6 +730,11 @@ class ModernDebris{
             if(this.bee){
                 this.bee.dead = true;
                 this.bee = undefined;
+            }
+            for(let i = 0; i < circles.length; i++){
+                const c = circles[i];
+                if(c.pos.dist(this.pos) < c.r())
+                    c.explode();
             }
         }
     }
@@ -779,5 +844,7 @@ function keyPressed(){
         hives.push(new Hive(mouseX, mouseY, random(80, 150), color(random(255),random(255),random(255))));
     }else if(key === 'X'){
         lightning_bolts.push(new Lightning(mouseX, mouseY));
+    }else if(key === 'D'){
+        dark = !dark;
     }
 }
