@@ -1,5 +1,13 @@
 About: Gravity Bubbles redone ... and more explosive
 
+v20221218a:
+    + Added dark theme (toggleable by pressing "D")
+    + Added ill flares
+        > Produced by bees harvesting an ill bubble (or the death of an ill bee)
+        > Can spread illness to other bubbles and hives
+    * Tweaks to bee behavior
+    * Lightning now bursts bubbles
+    * When a bubble is hit by a killer flare, any modern debris within the bubble gains mass
 v20221207a:
     + Added lightning
         > Randomly strikes modern debris and armored hives when raining
