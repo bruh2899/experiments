@@ -129,15 +129,15 @@ var HypoTrack = (function(){
                                 if(d.type === 0)
                                     ellipse(x,coords.y,dotSize,dotSize);
                                 else if(d.type === 1)
-                                    rect(coords.x-dotSize/2,coords.y-dotSize/2,dotSize,dotSize);
+                                    rect(x-dotSize*0.30,coords.y-dotSize*0.30,dotSize*0.6,dotSize*0.6);
                                 else if(d.type === 2)
                                     triangle(
-                                        coords.x+dotSize/2*cos(PI/6),
-                                        coords.y+dotSize/2*sin(PI/6),
-                                        coords.x+dotSize/2*cos(5*PI/6),
-                                        coords.y+dotSize/2*sin(5*PI/6),
-                                        coords.x+dotSize/2*cos(3*PI/2),
-                                        coords.y+dotSize/2*sin(3*PI/2)
+                                        x+dotSize/2.2*cos(PI/6),
+                                        coords.y+dotSize/2.2*sin(PI/6),
+                                        x+dotSize/2.2*cos(5*PI/6),
+                                        coords.y+dotSize/2.2*sin(5*PI/6),
+                                        x+dotSize/2.2*cos(3*PI/2),
+                                        coords.y+dotSize/2.2*sin(3*PI/2)
                                         );
                             }
                         }
