@@ -81,7 +81,7 @@ var HypoTrack = (function(){
             // image(mapImg,0,HEIGHT-WIDTH/2,WIDTH,WIDTH/2,panLocation.x,panLocation.y,mapViewWidth(),mapViewHeight());
             drawMap();
             let dotSize = 2*pow(1.25,zoomAmt);
-            strokeWeight(dotSize/9);
+            strokeWeight(dotSize/7);
             for(let i=0;i<tracks.length;i++){
                 if(!hideNonSelectedTracks || selectedTrack === tracks[i]){
                     for(let j=0;j<tracks[i].length;j++){
