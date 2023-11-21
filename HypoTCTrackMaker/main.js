@@ -81,7 +81,7 @@ var HypoTrack = (function(){
             // image(mapImg,0,HEIGHT-WIDTH/2,WIDTH,WIDTH/2,panLocation.x,panLocation.y,mapViewWidth(),mapViewHeight());
             drawMap();
             let dotSize = 2*pow(1.25,zoomAmt);
-            strokeWeight(dotSize/7);
+            strokeWeight(dotSize/5);
             for(let i=0;i<tracks.length;i++){
                 if(!hideNonSelectedTracks || selectedTrack === tracks[i]){
                     for(let j=0;j<tracks[i].length;j++){
@@ -129,15 +129,15 @@ var HypoTrack = (function(){
                                 if(d.type === 0)
                                     ellipse(x,coords.y,dotSize,dotSize);
                                 else if(d.type === 1)
-                                    rect(x-dotSize*0.35,coords.y-dotSize*0.35,dotSize*0.7,dotSize*0.7);
+                                    rect(coords.x-dotSize/2,coords.y-dotSize/2,dotSize,dotSize);
                                 else if(d.type === 2)
                                     triangle(
-                                        x+dotSize/2.2*cos(PI/6),
-                                        coords.y+dotSize/2.2*sin(PI/6),
-                                        x+dotSize/2.2*cos(5*PI/6),
-                                        coords.y+dotSize/2.2*sin(5*PI/6),
-                                        x+dotSize/2.2*cos(3*PI/2),
-                                        coords.y+dotSize/2.2*sin(3*PI/2)
+                                        coords.x+dotSize/2*cos(PI/6),
+                                        coords.y+dotSize/2*sin(PI/6),
+                                        coords.x+dotSize/2*cos(5*PI/6),
+                                        coords.y+dotSize/2*sin(5*PI/6),
+                                        coords.x+dotSize/2*cos(3*PI/2),
+                                        coords.y+dotSize/2*sin(3*PI/2)
                                         );
                             }
                         }
